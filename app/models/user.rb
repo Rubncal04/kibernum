@@ -6,6 +6,7 @@ class User < ApplicationRecord
 
   has_many :created_products, class_name: "Product", foreign_key: "created_by_id"
   has_many :created_categories, class_name: "Category", foreign_key: "created_by_id"
+  has_many :activity_logs, dependent: :destroy
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true

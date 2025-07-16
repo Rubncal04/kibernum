@@ -13,6 +13,7 @@ module Api
         if token
           decoded = JwtService.decode(token)
           @current_user = User.find(decoded["user_id"]) if decoded
+          Current.user = @current_user if @current_user
         end
         
         unless @current_user

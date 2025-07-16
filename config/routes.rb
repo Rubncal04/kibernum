@@ -22,6 +22,7 @@ Rails.application.routes.draw do
       get "purchases/by_granularity", to: "purchases#purchases_by_granularity"
       
       resources :purchases
+      resources :activity_logs, only: [:index, :show]
     end
   end
 

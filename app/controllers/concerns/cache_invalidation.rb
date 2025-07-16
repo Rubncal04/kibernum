@@ -23,4 +23,8 @@ module CacheInvalidation
     Rails.cache.delete_matched("purchases_index*")
     Rails.cache.delete_matched("purchases_by_granularity*")
   end
+
+  def invalidate_activity_log_cache
+    Rails.cache.delete_matched("activity_logs_index*")
+  end
 end

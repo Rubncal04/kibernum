@@ -10,9 +10,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_16_012057) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_16_013000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "activity_logs", force: :cascade do |t|
+    t.string "scope_type", null: false
+    t.integer "scope_id", null: false
+    t.bigint "user_id", null: false
+    t.string "action", null: false
+    t.jsonb "changes_data", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action"], name: "index_activity_logs_on_action"
+    t.index ["created_at"], name: "index_activity_logs_on_created_at"
+    t.index ["scope_type", "scope_id"], name: "index_activity_logs_on_scope_type_and_scope_id"
+    t.index ["user_id", "created_at"], name: "index_activity_logs_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_activity_logs_on_user_id"
+  end
 
   create_table "categories", force: :cascade do |t|
     t.string "name", null: false
@@ -104,6 +119,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_16_012057) do
     t.index ["role_id"], name: "index_users_on_role_id"
   end
 
+  add_foreign_key "activity_logs", "users"
   add_foreign_key "categories", "users", column: "created_by_id"
   add_foreign_key "product_images", "products"
   add_foreign_key "products", "users", column: "created_by_id"

@@ -1,17 +1,22 @@
 module Api
   module V1
     class ProductsController < BaseController
+      include CacheInvalidation
       before_action :set_product, only: [:show, :update, :destroy, :add_categories, :remove_categories]
 
       def index
-        @products = Product.includes(:categories, :created_by)
-                          .ordered
-                          .page(params[:page])
-                          .per(params[:per_page] || 20)
+        page = params[:page] || 1
+        per_page = params[:per_page] || 20
+        
+        cache_key = "products_index:#{page}:#{per_page}:#{Product.maximum(:updated_at)&.to_i}"
 
-        render json: {
-          status: 'success',
-          data: {
+        result = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
+          @products = Product.includes(:categories, :created_by)
+                            .ordered
+                            .page(page)
+                            .per(per_page)
+
+          {
             products: @products.map { |product| product_response(product) },
             pagination: {
               current_page: @products.current_page,
@@ -19,6 +24,12 @@ module Api
               total_count: @products.total_count
             }
           }
+        end
+
+        render json: {
+          status: 'success',
+          data: result,
+          cached: true
         }
       end
 
@@ -36,6 +47,7 @@ module Api
         @product.created_by = @current_user
 
         if @product.save
+          invalidate_product_cache
           render json: {
             status: 'success',
             message: 'Product created successfully',
@@ -54,6 +66,7 @@ module Api
 
       def update
         if @product.update(product_params)
+          invalidate_product_cache
           render json: {
             status: 'success',
             message: 'Product updated successfully',
@@ -72,6 +85,7 @@ module Api
 
       def destroy
         if @product.destroy
+          invalidate_product_cache
           render json: {
             status: 'success',
             message: 'Product deleted successfully'
@@ -86,60 +100,68 @@ module Api
       end
 
       def most_purchased_by_category
-        categories = Category.includes(:products)
-        result = {}
+        result = Rails.cache.fetch("most_purchased_by_category", expires_in: 15.minutes) do
+          categories = Category.includes(:products)
+          result = {}
 
-        categories.each do |category|
-          top_products = category.products
-                                .joins(:purchases)
-                                .group('products.id')
-                                .order('SUM(purchases.quantity) DESC')
-                                .limit(3)
-                                .select('products.*, SUM(purchases.quantity) as total_quantity')
+          categories.each do |category|
+            top_products = category.products
+                                  .joins(:purchases)
+                                  .group('products.id')
+                                  .order('SUM(purchases.quantity) DESC')
+                                  .limit(3)
+                                  .select('products.*, SUM(purchases.quantity) as total_quantity')
 
-          result[category.name] = top_products.map do |product|
-            {
-              id: product.id,
-              name: product.name,
-              total_quantity: product.total_quantity,
-              price: product.price,
-              total_revenue: product.total_revenue
-            }
+            result[category.name] = top_products.map do |product|
+              {
+                id: product.id,
+                name: product.name,
+                total_quantity: product.total_quantity,
+                price: product.price,
+                total_revenue: product.total_revenue
+              }
+            end
           end
+          result
         end
 
         render json: {
           status: 'success',
-          data: result
+          data: result,
+          cached: true
         }
       end
 
       def top_revenue_by_category
-        categories = Category.includes(:products)
-        result = {}
+        result = Rails.cache.fetch("top_revenue_by_category", expires_in: 15.minutes) do
+          categories = Category.includes(:products)
+          result = {}
 
-        categories.each do |category|
-          top_products = category.products
-                                .joins(:purchases)
-                                .group('products.id')
-                                .order('SUM(purchases.total_amount) DESC')
-                                .limit(3)
-                                .select('products.*, SUM(purchases.total_amount) as total_revenue')
+          categories.each do |category|
+            top_products = category.products
+                                  .joins(:purchases)
+                                  .group('products.id')
+                                  .order('SUM(purchases.total_amount) DESC')
+                                  .limit(3)
+                                  .select('products.*, SUM(purchases.total_amount) as total_revenue')
 
-          result[category.name] = top_products.map do |product|
-            {
-              id: product.id,
-              name: product.name,
-              total_revenue: product.total_revenue,
-              price: product.price,
-              total_quantity: product.total_purchases
-            }
+            result[category.name] = top_products.map do |product|
+              {
+                id: product.id,
+                name: product.name,
+                total_revenue: product.total_revenue,
+                price: product.price,
+                total_quantity: product.total_purchases
+              }
+            end
           end
+          result
         end
 
         render json: {
           status: 'success',
-          data: result
+          data: result,
+          cached: true
         }
       end
 

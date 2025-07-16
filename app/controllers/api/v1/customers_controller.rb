@@ -1,17 +1,22 @@
 module Api
   module V1
     class CustomersController < BaseController
+      include CacheInvalidation
       before_action :set_customer, only: [:show, :update, :destroy]
 
       def index
-        @customers = Customer.includes(:purchases)
-                            .ordered
-                            .page(params[:page])
-                            .per(params[:per_page] || 20)
+        page = params[:page] || 1
+        per_page = params[:per_page] || 20
+        
+        cache_key = "customers_index:#{page}:#{per_page}:#{Customer.maximum(:updated_at)&.to_i}"
 
-        render json: {
-          status: 'success',
-          data: {
+        result = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
+          @customers = Customer.includes(:purchases)
+                              .ordered
+                              .page(page)
+                              .per(per_page)
+
+          {
             customers: @customers.map { |customer| customer_response(customer) },
             pagination: {
               current_page: @customers.current_page,
@@ -19,6 +24,12 @@ module Api
               total_count: @customers.total_count
             }
           }
+        end
+
+        render json: {
+          status: 'success',
+          data: result,
+          cached: true
         }
       end
 
@@ -35,6 +46,7 @@ module Api
         @customer = Customer.new(customer_params)
 
         if @customer.save
+          invalidate_customer_cache
           render json: {
             status: 'success',
             message: 'Customer created successfully',
@@ -53,6 +65,7 @@ module Api
 
       def update
         if @customer.update(customer_params)
+          invalidate_customer_cache
           render json: {
             status: 'success',
             message: 'Customer updated successfully',
@@ -71,6 +84,7 @@ module Api
 
       def destroy
         if @customer.destroy
+          invalidate_customer_cache
           render json: {
             status: 'success',
             message: 'Customer deleted successfully'

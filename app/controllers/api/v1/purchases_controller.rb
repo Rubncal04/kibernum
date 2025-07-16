@@ -1,17 +1,30 @@
 module Api
   module V1
     class PurchasesController < BaseController
+      include CacheInvalidation
       before_action :set_purchase, only: [:show, :update, :destroy]
 
       def index
-        @purchases = apply_filters(Purchase.includes(:customer, :product, product: :categories))
-                              .ordered
-                              .page(params[:page])
-                              .per(params[:per_page] || 20)
+        page = params[:page] || 1
+        per_page = params[:per_page] || 20
 
-        render json: {
-          status: 'success',
-          data: {
+        filter_params = {
+          date_from: params[:date_from],
+          date_to: params[:date_to],
+          category_id: params[:category_id],
+          customer_id: params[:customer_id],
+          admin_id: params[:admin_id]
+        }.compact
+        
+        cache_key = "purchases_index:#{page}:#{per_page}:#{filter_params.hash}:#{Purchase.maximum(:updated_at)&.to_i}"
+
+        result = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
+          @purchases = apply_filters(Purchase.includes(:customer, :product, product: :categories))
+                                .ordered
+                                .page(page)
+                                .per(per_page)
+
+          {
             purchases: @purchases.map { |purchase| purchase_response(purchase) },
             pagination: {
               current_page: @purchases.current_page,
@@ -19,6 +32,12 @@ module Api
               total_count: @purchases.total_count
             }
           }
+        end
+
+        render json: {
+          status: 'success',
+          data: result,
+          cached: true
         }
       end
 
@@ -35,6 +54,7 @@ module Api
         @purchase = Purchase.new(purchase_params)
 
         if @purchase.save
+          invalidate_analytics_cache
           render json: {
             status: 'success',
             message: 'Purchase created successfully',
@@ -53,6 +73,7 @@ module Api
 
       def update
         if @purchase.update(purchase_params)
+          invalidate_purchase_cache
           render json: {
             status: 'success',
             message: 'Purchase updated successfully',
@@ -71,6 +92,7 @@ module Api
 
       def destroy
         if @purchase.destroy
+          invalidate_purchase_cache
           render json: {
             status: 'success',
             message: 'Purchase deleted successfully'
@@ -114,8 +136,12 @@ module Api
           return
         end
 
-        purchases = apply_filters(Purchase.all)
-        result = aggregate_purchases_by_granularity(purchases, granularity)
+        cache_key = "purchases_by_granularity:#{granularity}:#{params[:date_from]}:#{params[:date_to]}:#{params[:category_id]}:#{params[:customer_id]}:#{params[:admin_id]}"
+
+        result = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
+          purchases = apply_filters(Purchase.all)
+          aggregate_purchases_by_granularity(purchases, granularity)
+        end
 
         render json: {
           status: 'success',
@@ -129,7 +155,8 @@ module Api
               customer_id: params[:customer_id],
               admin_id: params[:admin_id]
             }
-          }
+          },
+          cached: true
         }
       end
 

@@ -86,18 +86,60 @@ module Api
       end
 
       def most_purchased_by_category
+        categories = Category.includes(:products)
+        result = {}
+
+        categories.each do |category|
+          top_products = category.products
+                                .joins(:purchases)
+                                .group('products.id')
+                                .order('SUM(purchases.quantity) DESC')
+                                .limit(3)
+                                .select('products.*, SUM(purchases.quantity) as total_quantity')
+
+          result[category.name] = top_products.map do |product|
+            {
+              id: product.id,
+              name: product.name,
+              total_quantity: product.total_quantity,
+              price: product.price,
+              total_revenue: product.total_revenue
+            }
+          end
+        end
+
         render json: {
           status: 'success',
-          message: 'API will be implemented when Purchase model is created',
-          data: []
+          data: result
         }
       end
 
       def top_revenue_by_category
+        categories = Category.includes(:products)
+        result = {}
+
+        categories.each do |category|
+          top_products = category.products
+                                .joins(:purchases)
+                                .group('products.id')
+                                .order('SUM(purchases.total_amount) DESC')
+                                .limit(3)
+                                .select('products.*, SUM(purchases.total_amount) as total_revenue')
+
+          result[category.name] = top_products.map do |product|
+            {
+              id: product.id,
+              name: product.name,
+              total_revenue: product.total_revenue,
+              price: product.price,
+              total_quantity: product.total_purchases
+            }
+          end
+        end
+
         render json: {
           status: 'success',
-          message: 'API will be implemented when Purchase model is created',
-          data: []
+          data: result
         }
       end
 

@@ -15,6 +15,13 @@ Rails.application.routes.draw do
           get "top_revenue_by_category", to: "products#top_revenue_by_category"
         end
       end
+
+      resources :customers
+
+      get "purchases/filtered/list", to: "purchases#filtered_list"
+      get "purchases/by_granularity", to: "purchases#purchases_by_granularity"
+      
+      resources :purchases
     end
   end
 

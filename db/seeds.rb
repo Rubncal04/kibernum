@@ -65,7 +65,6 @@ home = Category.create!(
 
 puts "Creating products..."
 
-# Productos de Electrónicos
 laptop = Product.create!(
   name: "HP Pavilion Laptop",
   description: "15-inch laptop with Intel i5 processor",
@@ -90,7 +89,6 @@ tablet = Product.create!(
   created_by: admin_user
 )
 
-# Productos de Ropa
 tshirt = Product.create!(
   name: "Basic T-shirt",
   description: "Cotton t-shirt in various colors",
@@ -107,7 +105,6 @@ jeans = Product.create!(
   created_by: admin_user
 )
 
-# Productos de Libros
 novel = Product.create!(
   name: "The Lord of the Rings",
   description: "Complete trilogy of J.R.R. Tolkien",
@@ -124,7 +121,6 @@ programming_book = Product.create!(
   created_by: admin_user
 )
 
-# Productos de Deportes
 basketball = Product.create!(
   name: "Basketball",
   description: "Official NBA ball",
@@ -141,7 +137,6 @@ yoga_mat = Product.create!(
   created_by: admin_user
 )
 
-# Productos de Hogar
 coffee_maker = Product.create!(
   name: "Automatic Coffee Maker",
   description: "Programmable coffee maker with integrated grinder",
@@ -164,25 +159,154 @@ laptop.categories << electronics
 smartphone.categories << electronics
 tablet.categories << electronics
 
-# Clothing
 tshirt.categories << clothing
 jeans.categories << clothing
 
-# Books
 novel.categories << books
 programming_book.categories << books
 
-# Sports
 basketball.categories << sports
 yoga_mat.categories << sports
 
-# Home
 coffee_maker.categories << home
 blender.categories << home
 
-# Some products in multiple categories
 laptop.categories << home
 yoga_mat.categories << home
+
+puts "Creating customers..."
+customer1 = Customer.create!(
+  name: "Juan Pérez",
+  email: "juan.perez@email.com",
+  phone: "+56912345678",
+  address: "Av. Providencia 123, Santiago"
+)
+
+customer2 = Customer.create!(
+  name: "María González",
+  email: "maria.gonzalez@email.com",
+  phone: "+56987654321",
+  address: "Las Condes 456, Santiago"
+)
+
+customer3 = Customer.create!(
+  name: "Carlos Rodríguez",
+  email: "carlos.rodriguez@email.com",
+  phone: "+56911223344",
+  address: "Ñuñoa 789, Santiago"
+)
+
+customer4 = Customer.create!(
+  name: "Ana Silva",
+  email: "ana.silva@email.com",
+  phone: "+56955667788",
+  address: "Providencia 321, Santiago"
+)
+
+puts "Creating purchases..."
+Purchase.create!(
+  customer: customer1,
+  product: laptop,
+  quantity: 1,
+  total_amount: 899.99,
+  purchase_date: 3.days.ago
+)
+
+Purchase.create!(
+  customer: customer2,
+  product: smartphone,
+  quantity: 2,
+  total_amount: 1999.98,
+  purchase_date: 2.days.ago
+)
+
+Purchase.create!(
+  customer: customer3,
+  product: tablet,
+  quantity: 1,
+  total_amount: 599.99,
+  purchase_date: 1.day.ago
+)
+
+Purchase.create!(
+  customer: customer1,
+  product: tshirt,
+  quantity: 3,
+  total_amount: 59.97,
+  purchase_date: 4.days.ago
+)
+
+Purchase.create!(
+  customer: customer4,
+  product: jeans,
+  quantity: 2,
+  total_amount: 99.98,
+  purchase_date: 2.days.ago
+)
+
+Purchase.create!(
+  customer: customer2,
+  product: novel,
+  quantity: 1,
+  total_amount: 29.99,
+  purchase_date: 5.days.ago
+)
+
+Purchase.create!(
+  customer: customer3,
+  product: programming_book,
+  quantity: 2,
+  total_amount: 79.98,
+  purchase_date: 1.day.ago
+)
+
+Purchase.create!(
+  customer: customer1,
+  product: basketball,
+  quantity: 1,
+  total_amount: 79.99,
+  purchase_date: 3.days.ago
+)
+
+Purchase.create!(
+  customer: customer4,
+  product: yoga_mat,
+  quantity: 2,
+  total_amount: 49.98,
+  purchase_date: 2.days.ago
+)
+
+Purchase.create!(
+  customer: customer2,
+  product: coffee_maker,
+  quantity: 1,
+  total_amount: 149.99,
+  purchase_date: 4.days.ago
+)
+
+Purchase.create!(
+  customer: customer3,
+  product: blender,
+  quantity: 1,
+  total_amount: 89.99,
+  purchase_date: 1.day.ago
+)
+
+Purchase.create!(
+  customer: customer1,
+  product: laptop,
+  quantity: 1,
+  total_amount: 899.99,
+  purchase_date: 1.day.ago
+)
+
+Purchase.create!(
+  customer: customer2,
+  product: smartphone,
+  quantity: 1,
+  total_amount: 999.99,
+  purchase_date: 3.days.ago
+)
 
 puts "✅ Seeds completed successfully!"
 puts "✅ Summary:"
@@ -190,6 +314,8 @@ puts "   - Roles: #{Role.count}"
 puts "   - Users: #{User.count}"
 puts "   - Categories: #{Category.count}"
 puts "   - Products: #{Product.count}"
+puts "   - Customers: #{Customer.count}"
+puts "   - Purchases: #{Purchase.count}"
 puts "   - Product-category associations: #{Product.joins(:categories).count}"
 puts ""
 puts "🔑 Admin credentials:"

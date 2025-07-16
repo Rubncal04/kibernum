@@ -191,4 +191,33 @@ RSpec.describe Purchase, type: :model do
       expect(purchase.quantity).to be_between(10, 50)
     end
   end
+
+  describe 'first purchase notification' do
+    let(:admin_role) { create(:role, name: 'admin') }
+    let(:product_creator) { create(:user, email: 'creator@example.com', role: admin_role) }
+    let(:product) { create(:product, created_by: product_creator) }
+    let(:customer) { create(:customer) }
+
+    context 'when creating the first purchase for a product' do
+      it 'sends first purchase notification' do
+        expect(FirstPurchaseService).to receive(:new).and_call_original
+        expect_any_instance_of(FirstPurchaseService).to receive(:notify_if_first_purchase)
+        
+        create(:purchase, product: product, customer: customer)
+      end
+    end
+
+    context 'when creating subsequent purchases for a product' do
+      before do
+        create(:purchase, product: product, customer: customer)
+      end
+
+      it 'still calls the service but may not send notification' do
+        expect(FirstPurchaseService).to receive(:new).and_call_original
+        expect_any_instance_of(FirstPurchaseService).to receive(:notify_if_first_purchase)
+        
+        create(:purchase, product: product, customer: create(:customer))
+      end
+    end
+  end
 end

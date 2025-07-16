@@ -1,0 +1,31 @@
+First Purchase!
+
+Hello <%= @product_creator.name %>,
+
+Good news! Your product "<%= @product.name %>" has just received its FIRST PURCHASE.
+
+PRODUCT INFORMATION:
+- Name: <%= @product.name %>
+- Description: <%= @product.description %>
+- Price: $<%= number_with_precision(@product.price, precision: 2) %>
+- Categories: <%= @product.categories.pluck(:name).join(', ') %>
+
+CUSTOMER INFORMATION:
+- Name: <%= @customer.name %>
+- Email: <%= @customer.email %>
+- Phone: <%= @customer.phone %>
+- Address: <%= @customer.address %>
+
+PURCHASE DETAILS:
+- Quantity: <%= @purchase.quantity %>
+- Total: $<%= number_with_precision(@purchase.total_amount, precision: 2) %>
+- Date: <%= @purchase.purchase_date.strftime('%d/%m/%Y %H:%M') %>
+
+Congratulations on your first sale! This demonstrates that your product is generating interest in the market.
+
+Best regards,
+Kibernum E-commerce Team
+
+---
+This email was automatically sent by the Kibernum E-commerce system.
+Date: <%= Time.current.strftime('%d/%m/%Y %H:%M') %>

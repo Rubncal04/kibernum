@@ -42,3 +42,7 @@ group :development, :test do
   gem "rubocop-rails", require: false
   gem "rubocop-performance", require: false
 end
+
+group :development do
+  gem "letter_opener"
+end

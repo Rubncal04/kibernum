@@ -22,6 +22,7 @@ class Purchase < ApplicationRecord
   
   before_validation :set_purchase_date
   before_validation :calculate_total_amount
+  after_create :notify_first_purchase
   
   private
   
@@ -32,5 +33,9 @@ class Purchase < ApplicationRecord
   def calculate_total_amount
     return unless product && quantity
     self.total_amount ||= product.price * quantity
+  end
+
+  def notify_first_purchase
+    FirstPurchaseService.new(self).notify_if_first_purchase
   end
 end

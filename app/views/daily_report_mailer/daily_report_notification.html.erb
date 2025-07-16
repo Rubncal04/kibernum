@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Daily Purchase Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #2c3e50; color: white; padding: 20px; text-align: center; border-radius: 5px; }
+    .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    .section h3 { color: #2c3e50; margin-top: 0; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0; }
+    .summary-item { background-color: #f8f9fa; padding: 15px; border-radius: 5px; text-align: center; }
+    .summary-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+    .summary-label { color: #666; margin-top: 5px; }
+    .table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    .table th, .table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+    .table th { background-color: #f8f9fa; font-weight: bold; }
+    .highlight { background-color: #e8f5e8; }
+    .footer { margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; text-align: center; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 Daily Purchase Report</h1>
+      <p><%= @date.strftime('%A, %B %d, %Y') %></p>
+    </div>
+
+    <div class="section">
+      <h3>📈 Summary</h3>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-value"><%= @report_data[:summary][:total_purchases] %></div>
+          <div class="summary-label">Total Purchases</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value">$<%= number_with_precision(@report_data[:summary][:total_revenue], precision: 2) %></div>
+          <div class="summary-label">Total Revenue</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value"><%= @report_data[:summary][:total_quantity] %></div>
+          <div class="summary-label">Total Quantity</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-value"><%= @report_data[:summary][:unique_customers] %></div>
+          <div class="summary-label">Unique Customers</div>
+        </div>
+      </div>
+    </div>
+
+    <% if @report_data[:top_products_by_revenue].any? %>
+    <div class="section">
+      <h3>🏆 Top Products by Revenue</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report_data[:top_products_by_revenue].each do |product_name, revenue| %>
+          <tr>
+            <td><%= product_name %></td>
+            <td>$<%= number_with_precision(revenue, precision: 2) %></td>
+          </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% end %>
+
+    <% if @report_data[:top_products_by_quantity].any? %>
+    <div class="section">
+      <h3>📦 Top Products by Quantity</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Quantity Sold</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report_data[:top_products_by_quantity].each do |product_name, quantity| %>
+          <tr>
+            <td><%= product_name %></td>
+            <td><%= quantity %></td>
+          </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% end %>
+
+    <% if @report_data[:purchases_by_category].any? %>
+    <div class="section">
+      <h3>📂 Revenue by Category</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report_data[:purchases_by_category].each do |category_name, revenue| %>
+          <tr>
+            <td><%= category_name %></td>
+            <td>$<%= number_with_precision(revenue, precision: 2) %></td>
+          </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% end %>
+
+    <% if @report_data[:top_customers].any? %>
+    <div class="section">
+      <h3>👥 Top Customers</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Email</th>
+            <th>Total Spent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report_data[:top_customers].each do |customer_info, amount| %>
+          <tr>
+            <td><%= customer_info.split(', ')[1] %></td>
+            <td><%= customer_info.split(', ')[2] %></td>
+            <td>$<%= number_with_precision(amount, precision: 2) %></td>
+          </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% end %>
+
+    <% if @report_data[:detailed_purchases].any? %>
+    <div class="section">
+      <h3>📋 Detailed Purchases</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Product</th>
+            <th>Categories</th>
+            <th>Quantity</th>
+            <th>Amount</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @report_data[:detailed_purchases].each do |purchase| %>
+          <tr>
+            <td><%= purchase[:customer_name] %></td>
+            <td><%= purchase[:product_name] %></td>
+            <td><%= purchase[:categories] %></td>
+            <td><%= purchase[:quantity] %></td>
+            <td>$<%= number_with_precision(purchase[:total_amount], precision: 2) %></td>
+            <td><%= purchase[:purchase_date].strftime('%H:%M') %></td>
+          </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% end %>
+
+    <div class="footer">
+      <p>This report was automatically generated by the Kibernum E-commerce system.</p>
+      <p>Generated at: <%= Time.current.strftime('%Y-%m-%d %H:%M:%S %Z') %></p>
+    </div>
+  </div>
+</body>
+</html> 
